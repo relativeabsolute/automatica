@@ -1,17 +1,24 @@
+import { PronounReactions } from './roles/pronouns';
+import { ROLES } from './roles/types';
 import { Client, Message } from 'discord.js';
 import { inject, injectable } from 'inversify';
+import { IConfig } from './interfaces/config';
 import { TYPES } from './types';
 
 @injectable()
 export class Bot {
-    constructor(@inject(TYPES.Client) private client: Client, @inject(TYPES.Token) private token: string) {}
+    constructor(
+        @inject(TYPES.Client) private client: Client,
+        @inject(TYPES.Config) private config: IConfig,
+        @inject(ROLES.Pronouns) private pronounReactions: PronounReactions,
+    ) {}
 
-    public listen(): Promise<string> {
-        this.client.on('message', (message: Message) => {
-            console.log('Message received!  Contents: ', message.content);
-        });
+    public async listen(): Promise<void> {
+        console.log(`Attempting to login with token ${this.config.token}`);
 
-        console.log(`Attempting to login with token ${this.token}`);
-        return this.client.login(this.token);
+        await this.client.login(this.config.token);
+        console.log('Successfully logged in');
+
+        await this.pronounReactions.checkMessageReacts();
     }
 }
