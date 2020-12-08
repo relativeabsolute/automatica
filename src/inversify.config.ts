@@ -13,6 +13,13 @@ function buildConfig(): IConfig {
     return {
         token: process.env.TOKEN,
         pronounsChannel: process.env.PRONOUNS_CHANNEL,
+        serverId: process.env.SERVER_ID,
+        roles: {
+            askMyPronouns: process.env.ASK_MY_PRONOUNS_ROLE,
+            heHim: process.env.HE_HIM_ROLE,
+            sheHer: process.env.SHE_HER_ROLE,
+            theyThem: process.env.THEY_THEM_ROLE,
+        },
     };
 }
 

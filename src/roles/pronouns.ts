@@ -1,11 +1,13 @@
-import { Client, Message, MessageReaction, ReactionCollector, TextChannel, User } from 'discord.js';
+import { Client, Emoji, Message, MessageReaction, ReactionCollector, Role, TextChannel, User } from 'discord.js';
 import { inject, injectable } from 'inversify';
 import { IConfig } from '../interfaces/config';
+import { Emojis } from '../interfaces/emojis';
+import { getEnumKeys } from '../libraries/enums';
 import { TYPES } from '../types';
 
 function getReactionFilter(message: Message): (reaction: MessageReaction, user: User) => boolean {
     return (reaction: MessageReaction, user) => {
-        return user.id !== message.author.id;
+        return user.id !== message.author.id && getEnumKeys(Emojis).includes(reaction.emoji.name);
     };
 }
 
@@ -27,21 +29,36 @@ export class PronounReactions {
                 ':four: He/his',
             ];
             message = await pronounChannel.send(messageLines.join('\n'));
-            await message.react('1⃣');
-            await message.react('2⃣');
-            await message.react('3⃣');
-            await message.react('4⃣');
+            await message.react(Emojis.One);
+            await message.react(Emojis.Two);
+            await message.react(Emojis.Three);
+            await message.react(Emojis.Four);
             await message.pin();
         } else {
             message = pinned.first();
         }
-        console.log(JSON.stringify(message));
         const collector = message.createReactionCollector(getReactionFilter(message));
-        this.attachEventHandlers(collector);
-    }
-
-    attachEventHandlers(collector: ReactionCollector): void {
         collector.on('collect', (reaction: MessageReaction, user: User) => {});
         collector.on('remove', (reaction: MessageReaction, user: User) => {});
+    }
+
+    async assignRole(reaction: Emojis, user: User): Promise<void> {
+        const guild = await this.client.guilds.fetch(this.config.serverId);
+        let role: Role;
+        switch (reaction) {
+            case Emojis.One: // ask my pronouns
+                role = await guild.roles.fetch(this.config.roles.askMyPronouns);
+                break;
+            case Emojis.Two: // they/them
+                role = await guild.roles.fetch(this.config.roles.theyThem);
+                break;
+            case Emojis.Three: // she/her
+                role = await guild.roles.fetch(this.config.roles.sheHer);
+                break;
+            case Emojis.Four: // he/him
+                role = await guild.roles.fetch(this.config.roles.heHim);
+                break;
+        }
+        guild.members.fetch(); // TODO: what is the id?
     }
 }
